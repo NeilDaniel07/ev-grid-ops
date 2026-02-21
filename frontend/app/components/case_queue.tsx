@@ -4,6 +4,14 @@ type CaseQueueProps = {
   title: string;
   mode: CaseMode;
   cases: Case[];
+  caseStatus: Record<
+    string,
+    {
+      dispatched?: boolean;
+      verified?: boolean;
+      verificationResult?: "confirmed_issue" | "false_alarm" | "needs_more_data";
+    }
+  >;
   selectedCaseId: string | null;
   isLoading: boolean;
   onSelectCase: (mode: CaseMode, caseId: string) => void;
@@ -15,7 +23,13 @@ function priorityClass(score: number): "high" | "medium" | "low" {
   return "low";
 }
 
-export function CaseQueue({ title, mode, cases, selectedCaseId, isLoading, onSelectCase }: CaseQueueProps) {
+function verificationLabel(result: "confirmed_issue" | "false_alarm" | "needs_more_data"): string {
+  if (result === "confirmed_issue") return "Verified";
+  if (result === "false_alarm") return "False alarm";
+  return "Needs more data";
+}
+
+export function CaseQueue({ title, mode, cases, caseStatus, selectedCaseId, isLoading, onSelectCase }: CaseQueueProps) {
   const sortedCases = [...cases].sort((a, b) => b.priority_score - a.priority_score);
 
   return (
@@ -26,11 +40,12 @@ export function CaseQueue({ title, mode, cases, selectedCaseId, isLoading, onSel
       </div>
 
       {sortedCases.length === 0 ? (
-        <p className="queue-empty">{isLoading ? "Running triage..." : "No cases yet. Run triage to populate this queue."}</p>
+        <p className="queue-empty">{isLoading ? "Loading queue..." : "No cases yet. Load this queue to populate it."}</p>
       ) : (
         <div className="case-list">
           {sortedCases.map((item) => {
             const isSelected = selectedCaseId === item.id;
+            const status = caseStatus[item.id];
             return (
               <button
                 key={`${mode}-${item.id}`}
@@ -45,6 +60,16 @@ export function CaseQueue({ title, mode, cases, selectedCaseId, isLoading, onSel
                   <span className="badge">Confidence {(item.confidence * 100).toFixed(0)}%</span>
                   <span className="badge">{item.recommended_action}</span>
                   {item.verification_required ? <span className="badge warn">verification required</span> : null}
+                  {status?.dispatched ? <span className="badge status dispatched">Dispatched</span> : null}
+                  {status?.verificationResult ? (
+                    <span
+                      className={`badge status ${
+                        status.verificationResult === "confirmed_issue" ? "verified" : "blocked"
+                      }`}
+                    >
+                      {verificationLabel(status.verificationResult)}
+                    </span>
+                  ) : null}
                 </div>
               </button>
             );
