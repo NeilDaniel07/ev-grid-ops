@@ -19,20 +19,22 @@ def _critical_cases(cases: Iterable[Case]) -> list[Case]:
 
 
 def compare_metrics() -> CompareMetrics:
-    """Return baseline vs certainty metric deltas derived from in-memory state."""
+    """Return baseline vs certainty metric deltas derived from persisted state."""
     baseline = store.get_cases("baseline")
     certainty = store.get_cases("certainty")
+    verification_tasks = store.get_verification_tasks_map()
+    verification_outcomes = store.get_verification_outcomes()
 
     baseline_dispatches = sum(1 for case in baseline if case.recommended_action == "dispatch_field_tech")
     certainty_dispatches = sum(1 for case in certainty if case.recommended_action == "dispatch_field_tech")
     false_dispatch_reduction_pct = _pct_reduction(float(baseline_dispatches), float(certainty_dispatches))
 
     baseline_triage_minutes = float(len(baseline) * 6)
-    certainty_triage_minutes = float((len(certainty) * 4) + int(len(store.verification_tasks) * 2))
+    certainty_triage_minutes = float((len(certainty) * 4) + int(len(verification_tasks) * 2))
     triage_time_reduction_pct = _pct_reduction(baseline_triage_minutes, certainty_triage_minutes)
 
     outcomes_by_case: Dict[str, str] = {
-        outcome["case_id"]: outcome["result"] for outcome in store.verification_outcomes
+        outcome["case_id"]: outcome["result"] for outcome in verification_outcomes
     }
 
     baseline_critical = _critical_cases(baseline)

@@ -52,6 +52,9 @@ def _persist_certainty_cases(cases: list[Case], tasks: list[VerificationTask]) -
 
 @router.post("/baseline", response_model=ApiResponse)
 def triage_baseline(payload: TriageRequest) -> ApiResponse:
+    signal_setter = getattr(store, "set_signals", None)
+    if callable(signal_setter):
+        signal_setter(payload.signals)
     cases = run_baseline_triage(payload.signals)
     _persist_baseline_cases(cases)
     return ApiResponse(ok=True, data=BaselineTriageResponseData(cases=cases), error=None)
@@ -59,6 +62,9 @@ def triage_baseline(payload: TriageRequest) -> ApiResponse:
 
 @router.post("/certainty", response_model=ApiResponse)
 def triage_certainty(payload: TriageRequest) -> ApiResponse:
+    signal_setter = getattr(store, "set_signals", None)
+    if callable(signal_setter):
+        signal_setter(payload.signals)
     cases, verification_tasks = run_certainty_triage(payload.signals)
     _persist_certainty_cases(cases, verification_tasks)
     return ApiResponse(

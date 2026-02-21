@@ -2,9 +2,15 @@
 
 from fastapi import FastAPI
 
+from app.db.session import init_database
 from app.routes import cases, metrics
 
 app = FastAPI(title="EV Grid Ops API", version="0.1.0")
+
+
+@app.on_event("startup")
+def on_startup() -> None:
+    init_database()
 
 app.include_router(cases.router, prefix="/api")
 app.include_router(metrics.router, prefix="/api")

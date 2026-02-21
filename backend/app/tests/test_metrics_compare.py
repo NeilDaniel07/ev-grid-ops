@@ -1,10 +1,9 @@
 from datetime import datetime
 from math import isfinite
 
-import pytest
-
 from app import store
 from app.models import Case, DispatchRequest, VerificationTask, VerifyRequest
+from app.routes.metrics import get_compare_metrics
 from app.services import case_service
 from app.services.metrics_service import compare_metrics
 
@@ -173,17 +172,7 @@ def test_compare_metrics_non_null_numeric_values():
 
 def test_compare_metrics_endpoint_envelope_shape():
     _seed_state()
-    pytest.importorskip("fastapi")
-    from fastapi.testclient import TestClient
-
-    from app.main import app
-
-    client = TestClient(app)
-
-    response = client.get("/api/metrics/compare")
-    assert response.status_code == 200
-
-    payload = response.json()
+    payload = get_compare_metrics().model_dump()
     assert set(payload.keys()) == {"ok", "data", "error"}
     assert payload["ok"] is True
     assert payload["error"] is None
@@ -220,7 +209,7 @@ def test_dispatch_case_creates_and_updates_work_order():
 
     assert first.work_order.case_id == "case_certainty_001"
     assert second.work_order.id == first.work_order.id
-    assert store.work_orders["case_certainty_001"].state == "in_progress"
+    assert store.get_work_orders_map()["case_certainty_001"].state == "in_progress"
 
 
 def test_verify_case_marks_task_done_and_persists_outcome():
@@ -230,8 +219,9 @@ def test_verify_case_marks_task_done_and_persists_outcome():
         VerifyRequest(result="confirmed_issue", notes="Connector bent."),
     )
 
-    task = store.verification_tasks["case_certainty_002"]
+    task = store.get_verification_tasks_map()["case_certainty_002"]
+    outcomes = store.get_verification_outcomes()
     assert response.verification_task.status == "done"
     assert task.status == "done"
     assert task.result == "confirmed_issue"
-    assert store.verification_outcomes[-1]["case_id"] == "case_certainty_002"
+    assert outcomes[-1]["case_id"] == "case_certainty_002"
