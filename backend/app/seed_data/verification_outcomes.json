@@ -2,9 +2,9 @@
   {
     "id": "ver_0144",
     "case_id": "case_aus_0144",
-    "result": "false_alarm",
+    "result": "confirmed_issue",
     "timestamp": "2026-02-21T02:00:00Z",
-    "notes": "Remote ping and reboot recovered service; no truck roll needed."
+    "notes": "Verification confirmed persistent outage after remote checks; dispatch warranted."
   },
   {
     "id": "ver_0201",
