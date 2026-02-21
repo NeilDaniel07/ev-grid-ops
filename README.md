@@ -42,7 +42,7 @@ By introducing structured verification for uncertain cases, operators can:
 - Preserve technician bandwidth for critical issues
 - Improve uptime consistency across charger networks
 
-## Demo Story (Judge-Friendly)
+## Demo Story
 
 In the demo, both systems receive the same incident stream:
 - Baseline dispatches based on severity only
