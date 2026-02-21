@@ -344,6 +344,28 @@ p {
   color: #334155;
 }
 
+.badge.status {
+  border: 1px solid transparent;
+}
+
+.badge.status.dispatched {
+  background: #ecfeff;
+  color: #0f766e;
+  border-color: #99f6e4;
+}
+
+.badge.status.verified {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.badge.status.blocked {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
 .detail {
   margin-top: 14px;
   padding: 14px;

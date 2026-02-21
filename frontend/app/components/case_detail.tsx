@@ -4,9 +4,23 @@ type CaseDetailProps = {
   selectedCase: Case | null;
   selectedMode: CaseMode | null;
   verificationTask: VerificationTask | null;
+  caseStatus?: {
+    dispatched?: boolean;
+    verified?: boolean;
+    verificationResult?: "confirmed_issue" | "false_alarm" | "needs_more_data";
+  };
 };
 
-export function CaseDetail({ selectedCase, selectedMode, verificationTask }: CaseDetailProps) {
+export function CaseDetail({ selectedCase, selectedMode, verificationTask, caseStatus }: CaseDetailProps) {
+  const verificationBubbleLabel =
+    caseStatus?.verificationResult === "confirmed_issue"
+      ? "Verified"
+      : caseStatus?.verificationResult === "false_alarm"
+        ? "False alarm"
+        : caseStatus?.verificationResult === "needs_more_data"
+          ? "Needs more data"
+          : null;
+
   if (!selectedCase || !selectedMode) {
     return (
       <section className="panel detail">
@@ -104,6 +118,23 @@ export function CaseDetail({ selectedCase, selectedMode, verificationTask }: Cas
               {selectedCase.verification_required ? "Verification required but no task returned yet." : "Not required"}
             </p>
           )}
+
+          <h4 style={{ marginTop: 12 }}>Completion Status</h4>
+          <div className="badges">
+            {caseStatus?.dispatched ? <span className="badge status dispatched">Dispatched</span> : null}
+            {verificationBubbleLabel ? (
+              <span
+                className={`badge status ${
+                  caseStatus?.verificationResult === "confirmed_issue" ? "verified" : "blocked"
+                }`}
+              >
+                {verificationBubbleLabel}
+              </span>
+            ) : null}
+            {!caseStatus?.dispatched && !caseStatus?.verificationResult ? (
+              <span className="badge">No actions completed yet</span>
+            ) : null}
+          </div>
         </div>
       </div>
     </section>

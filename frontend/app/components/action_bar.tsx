@@ -66,7 +66,7 @@ export function ActionBar({
       {stage === 1 ? (
         <div className="button-row">
           <button type="button" className="btn-primary" onClick={() => void onRunBaseline()} disabled={loading.baseline}>
-            {loading.baseline ? "Running Baseline..." : "Step 1: Run Baseline"}
+            {loading.baseline ? "Loading Baseline..." : "Step 1: Load Baseline"}
           </button>
         </div>
       ) : null}
@@ -74,7 +74,7 @@ export function ActionBar({
       {stage === 2 ? (
         <div className="button-row">
           <button type="button" className="btn-primary" onClick={() => void onRunCertainty()} disabled={loading.certainty}>
-            {loading.certainty ? "Running Certainty..." : "Step 2: Run Certainty"}
+            {loading.certainty ? "Loading Certainty..." : "Step 2: Load Certainty"}
           </button>
         </div>
       ) : null}

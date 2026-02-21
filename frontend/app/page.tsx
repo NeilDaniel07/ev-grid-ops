@@ -7,13 +7,12 @@ import { CaseDetail } from "./components/case_detail";
 import { CaseMap } from "./components/case_map";
 import { CaseQueue } from "./components/case_queue";
 import { KpiCards } from "./components/kpi_cards";
-import { dispatchCase, getCases, getCompareMetrics, runBaseline, runCertainty, verifyCase } from "./lib/api";
+import { dispatchCase, getCases, getCompareMetrics, verifyCase } from "./lib/api";
 import type {
   Case,
   CaseMode,
   CompareMetrics,
   DispatchRequest,
-  Signal,
   VerificationTask,
   VerifyRequest,
 } from "./lib/types";
@@ -27,75 +26,41 @@ type LoadingState = {
 };
 
 type Selection = { mode: CaseMode; caseId: string } | null;
-
-const DEMO_SIGNALS: Signal[] = [
+type CaseStatusMap = Record<
+  string,
   {
-    id: "sig_001",
-    source: "311",
-    timestamp: "2026-02-20T20:00:00Z",
-    charger_id: "AUS_0123",
-    lat: 30.2672,
-    lon: -97.7431,
-    status: "down",
-    text: "charger dead",
-  },
-  {
-    id: "sig_002",
-    source: "ugc",
-    timestamp: "2026-02-20T20:05:00Z",
-    charger_id: "AUS_0123",
-    lat: 30.2672,
-    lon: -97.7431,
-    status: "down",
-    text: "connector not working",
-  },
-  {
-    id: "sig_003",
-    source: "charger_api",
-    timestamp: "2026-02-20T20:08:00Z",
-    charger_id: "AUS_0123",
-    lat: 30.2672,
-    lon: -97.7431,
-    status: "degraded",
-    text: "session start failures",
-  },
-  {
-    id: "sig_004",
-    source: "311",
-    timestamp: "2026-02-20T20:10:00Z",
-    charger_id: "AUS_0450",
-    lat: 30.269,
-    lon: -97.749,
-    status: "unknown",
-    text: "payment terminal issue",
-  },
-  {
-    id: "sig_005",
-    source: "charger_api",
-    timestamp: "2026-02-20T20:12:00Z",
-    charger_id: "AUS_0450",
-    lat: 30.269,
-    lon: -97.749,
-    status: "online",
-    text: "heartbeat online",
-  },
-];
+    dispatched?: boolean;
+    verified?: boolean;
+    verificationResult?: "confirmed_issue" | "false_alarm" | "needs_more_data";
+  }
+>;
 
 const STEP_LABELS: Record<WorkflowStage, string> = {
-  1: "Run baseline triage",
-  2: "Run certainty triage",
+  1: "Load baseline queue",
+  2: "Load certainty queue",
   3: "Select a case to review",
   4: "Take action (dispatch or verify)",
   5: "Workflow complete",
 };
 
 const STEP_HINTS: Record<WorkflowStage, string> = {
-  1: "Start with baseline ranking to create an initial queue.",
-  2: "Now run certainty to find ambiguous cases before dispatch.",
+  1: "Start by loading the current baseline queue from backend.",
+  2: "Now load certainty results to find ambiguous cases before dispatch.",
   3: "Click a case in either queue to open explanation and evidence.",
   4: "Dispatch clear issues or submit verification for uncertain ones.",
-  5: "You can refresh triage anytime to process new signals.",
+  5: "Refresh queues anytime to pull the latest backend state.",
 };
+
+function fallbackLocationFromChargerId(chargerId: string): { lat: number; lon: number } {
+  let hash = 0;
+  for (let index = 0; index < chargerId.length; index += 1) {
+    hash = (hash * 31 + chargerId.charCodeAt(index)) >>> 0;
+  }
+  // Keep fallback points in an Austin-like bounding box for map rendering.
+  const lat = 30.16 + ((hash % 1000) / 1000) * 0.24;
+  const lon = -97.92 + ((((hash / 1000) | 0) % 1000) / 1000) * 0.34;
+  return { lat, lon };
+}
 
 export default function Page() {
   const [baselineCases, setBaselineCases] = useState<Case[]>([]);
@@ -114,6 +79,7 @@ export default function Page() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [metricsError, setMetricsError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [caseStatus, setCaseStatus] = useState<CaseStatusMap>({});
 
   const selectedCase = useMemo(() => {
     if (!selection) return null;
@@ -129,17 +95,21 @@ export default function Page() {
   const selectedCaseId = selectedCase?.id ?? null;
   const locationIndex = useMemo(() => {
     const map: Record<string, { charger_id: string; lat: number; lon: number }> = {};
-    for (const signal of DEMO_SIGNALS) {
-      if (!map[signal.charger_id]) {
-        map[signal.charger_id] = {
-          charger_id: signal.charger_id,
-          lat: signal.lat,
-          lon: signal.lon,
+
+    const knownCases = [...baselineCases, ...certaintyCases];
+    for (const item of knownCases) {
+      if (!map[item.charger_id]) {
+        const fallback = fallbackLocationFromChargerId(item.charger_id);
+        map[item.charger_id] = {
+          charger_id: item.charger_id,
+          lat: fallback.lat,
+          lon: fallback.lon,
         };
       }
     }
+
     return map;
-  }, []);
+  }, [baselineCases, certaintyCases]);
 
   const workflowStage: WorkflowStage = useMemo(() => {
     if (baselineCases.length === 0) return 1;
@@ -151,6 +121,7 @@ export default function Page() {
 
   useEffect(() => {
     void refreshMetrics();
+    void hydrateCasesFromBackend();
   }, []);
 
   async function refreshMetrics() {
@@ -162,6 +133,21 @@ export default function Page() {
       setMetricsError(error instanceof Error ? error.message : "Failed to load metrics");
     } finally {
       setLoading((prev) => ({ ...prev, metrics: false }));
+    }
+  }
+
+  async function hydrateCasesFromBackend() {
+    try {
+      const [baselineData, certaintyData] = await Promise.all([getCases("baseline"), getCases("certainty")]);
+      setBaselineCases(baselineData.cases);
+      setCertaintyCases(certaintyData.cases);
+      if (baselineData.cases.length > 0) {
+        setSelection((prev) => prev ?? { mode: "baseline", caseId: baselineData.cases[0].id });
+      } else if (certaintyData.cases.length > 0) {
+        setSelection((prev) => prev ?? { mode: "certainty", caseId: certaintyData.cases[0].id });
+      }
+    } catch {
+      // Keep empty state if backend has no persisted cases yet.
     }
   }
 
@@ -179,20 +165,14 @@ export default function Page() {
     setActionMessage(null);
 
     try {
-      const triageResult = await runBaseline(DEMO_SIGNALS);
-      let cases = triageResult.cases;
-      try {
-        cases = (await getCases("baseline")).cases;
-      } catch {
-        // Use direct triage response if persistence route is not populated.
-      }
+      const cases = (await getCases("baseline")).cases;
       setBaselineCases(cases);
       setHasActionTaken(false);
       selectFirstCaseIfNeeded("baseline", cases);
-      setActionMessage(`Baseline triage complete: ${cases.length} case(s).`);
+      setActionMessage(`Baseline queue loaded: ${cases.length} case(s).`);
       await refreshMetrics();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Failed to run baseline triage");
+      setActionError(error instanceof Error ? error.message : "Failed to load baseline queue");
     } finally {
       setLoading((prev) => ({ ...prev, baseline: false }));
     }
@@ -204,23 +184,26 @@ export default function Page() {
     setActionMessage(null);
 
     try {
-      const triageResult = await runCertainty(DEMO_SIGNALS);
-      let cases = triageResult.cases;
-      try {
-        cases = (await getCases("certainty")).cases;
-      } catch {
-        // Use direct triage response if persistence route is not populated.
-      }
+      const cases = (await getCases("certainty")).cases;
       setCertaintyCases(cases);
-      setVerificationTasks(triageResult.verification_tasks);
+      setVerificationTasks(
+        cases
+          .filter((item) => item.verification_required)
+          .map((item) => ({
+            id: `vt_${item.id}`,
+            case_id: item.id,
+            question: item.uncertainty_reasons?.[0] ?? "Low confidence requires verification.",
+            owner: "OpsQA",
+            status: "open" as const,
+          })),
+      );
       setHasActionTaken(false);
       selectFirstCaseIfNeeded("certainty", cases);
-      setActionMessage(
-        `Certainty triage complete: ${cases.length} case(s), ${triageResult.verification_tasks.length} verification task(s).`,
-      );
+      const verificationCount = cases.filter((item) => item.verification_required).length;
+      setActionMessage(`Certainty queue loaded: ${cases.length} case(s), ${verificationCount} verification task(s).`);
       await refreshMetrics();
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Failed to run certainty triage");
+      setActionError(error instanceof Error ? error.message : "Failed to load certainty queue");
     } finally {
       setLoading((prev) => ({ ...prev, certainty: false }));
     }
@@ -239,6 +222,13 @@ export default function Page() {
     try {
       await dispatchCase(selectedCase.id, payload);
       setHasActionTaken(true);
+      setCaseStatus((prev) => ({
+        ...prev,
+        [selectedCase.id]: {
+          ...prev[selectedCase.id],
+          dispatched: true,
+        },
+      }));
       setActionMessage(`Dispatch created for ${selectedCase.id}.`);
       if (selection) {
         const updated = await getCases(selection.mode);
@@ -266,6 +256,14 @@ export default function Page() {
     try {
       const response = await verifyCase(selectedCase.id, payload);
       setHasActionTaken(true);
+      setCaseStatus((prev) => ({
+        ...prev,
+        [selectedCase.id]: {
+          ...prev[selectedCase.id],
+          verified: payload.result === "confirmed_issue",
+          verificationResult: payload.result,
+        },
+      }));
       setVerificationTasks((prev) => {
         const filtered = prev.filter((task) => task.case_id !== selectedCase.id);
         return [...filtered, response.verification_task];
@@ -335,6 +333,7 @@ export default function Page() {
           title="Baseline Queue"
           mode="baseline"
           cases={baselineCases}
+          caseStatus={caseStatus}
           selectedCaseId={selection?.mode === "baseline" ? selection.caseId : null}
           isLoading={loading.baseline}
           onSelectCase={(mode, caseId) => setSelection({ mode, caseId })}
@@ -343,6 +342,7 @@ export default function Page() {
           title="Certainty Queue"
           mode="certainty"
           cases={certaintyCases}
+          caseStatus={caseStatus}
           selectedCaseId={selection?.mode === "certainty" ? selection.caseId : null}
           isLoading={loading.certainty}
           onSelectCase={(mode, caseId) => setSelection({ mode, caseId })}
@@ -356,7 +356,12 @@ export default function Page() {
         onSelectCase={(mode, caseId) => setSelection({ mode, caseId })}
       />
 
-      <CaseDetail selectedCase={selectedCase} selectedMode={selection?.mode ?? null} verificationTask={selectedTask} />
+      <CaseDetail
+        selectedCase={selectedCase}
+        selectedMode={selection?.mode ?? null}
+        verificationTask={selectedTask}
+        caseStatus={selectedCase ? caseStatus[selectedCase.id] : undefined}
+      />
     </main>
   );
 }
