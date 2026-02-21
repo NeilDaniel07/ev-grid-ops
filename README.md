@@ -1,11 +1,11 @@
-# EV Grid Ops
+# EV Reliability Copilot
 
 **Built for the Texas Venture Group × c0mpiled Hackathon (UT Austin)**
 
 Live app: https://frontend-wheat-alpha-32.vercel.app/
 
 ## Overview
-EV Grid Ops helps EV charging operators answer one costly question:
+EV Reliability Copilot helps EV charging operators answer one costly question:
 
 **“Should we dispatch a technician now, or verify first?”**
 
@@ -22,7 +22,7 @@ Operators are forced into a bad tradeoff:
 
 ## Our Solution
 
-EV Grid Ops compares two approaches side by side:
+EV Reliability Copilot compares two approaches side by side:
 
 1. **Baseline Triage**
    - Prioritizes incidents from severity signals
