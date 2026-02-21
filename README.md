@@ -1,7 +1,9 @@
 # EV Grid Ops
 
 **Built for the Texas Venture Group × c0mpiled Hackathon (UT Austin)**
+Live app: ```https://frontend-wheat-alpha-32.vercel.app/```
 
+## Overview
 EV Grid Ops helps EV charging operators answer one costly question:
 
 **“Should we dispatch a technician now, or verify first?”**
