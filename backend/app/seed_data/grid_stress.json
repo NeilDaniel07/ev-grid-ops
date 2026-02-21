@@ -1,0 +1,17 @@
+[
+  {
+    "zone": "AUSTIN_CENTRAL",
+    "timestamp": "2026-02-21T13:00:00Z",
+    "stress_level": "high"
+  },
+  {
+    "zone": "AUSTIN_NORTH",
+    "timestamp": "2026-02-21T13:00:00Z",
+    "stress_level": "elevated"
+  },
+  {
+    "zone": "AUSTIN_SOUTH",
+    "timestamp": "2026-02-21T13:00:00Z",
+    "stress_level": "normal"
+  }
+]

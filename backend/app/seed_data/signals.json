@@ -1,0 +1,112 @@
+[
+  {
+    "id": "sig_001",
+    "source": "charger_api",
+    "timestamp": "2026-02-21T13:00:00Z",
+    "charger_id": "AUS_0123",
+    "lat": 30.2672,
+    "lon": -97.7431,
+    "status": "down",
+    "text": "connector bent; charger offline"
+  },
+  {
+    "id": "sig_002",
+    "source": "311",
+    "timestamp": "2026-02-21T13:03:00Z",
+    "charger_id": "AUS_0123",
+    "lat": 30.2672,
+    "lon": -97.7431,
+    "status": "down",
+    "text": "driver reported plug issue and station down"
+  },
+  {
+    "id": "sig_003",
+    "source": "ugc",
+    "timestamp": "2026-02-21T13:06:00Z",
+    "charger_id": "AUS_0123",
+    "lat": 30.2672,
+    "lon": -97.7431,
+    "status": "down",
+    "text": "cable and connector appear damaged"
+  },
+  {
+    "id": "sig_004",
+    "source": "charger_api",
+    "timestamp": "2026-02-21T13:01:00Z",
+    "charger_id": "AUS_0144",
+    "lat": 30.2701,
+    "lon": -97.7501,
+    "status": "down",
+    "text": "network timeout then charger unreachable"
+  },
+  {
+    "id": "sig_005",
+    "source": "311",
+    "timestamp": "2026-02-21T13:02:00Z",
+    "charger_id": "AUS_0144",
+    "lat": 30.2701,
+    "lon": -97.7501,
+    "status": "online",
+    "text": "caller saw charger recover briefly"
+  },
+  {
+    "id": "sig_006",
+    "source": "ugc",
+    "timestamp": "2026-02-21T13:04:00Z",
+    "charger_id": "AUS_0144",
+    "lat": 30.2701,
+    "lon": -97.7501,
+    "status": "down",
+    "text": "charger offline again after brief recovery"
+  },
+  {
+    "id": "sig_007",
+    "source": "charger_api",
+    "timestamp": "2026-02-21T13:05:00Z",
+    "charger_id": "AUS_0201",
+    "lat": 30.262,
+    "lon": -97.73,
+    "status": "degraded",
+    "text": "payment terminal errors and slow session start"
+  },
+  {
+    "id": "sig_008",
+    "source": "311",
+    "timestamp": "2026-02-21T13:08:00Z",
+    "charger_id": "AUS_0201",
+    "lat": 30.262,
+    "lon": -97.73,
+    "status": "unknown",
+    "text": "driver could not activate card reader"
+  },
+  {
+    "id": "sig_009",
+    "source": "charger_api",
+    "timestamp": "2026-02-21T13:10:00Z",
+    "charger_id": "AUS_0330",
+    "lat": 30.2511,
+    "lon": -97.7612,
+    "status": "down",
+    "text": "single down alert, limited telemetry"
+  },
+  {
+    "id": "sig_010",
+    "source": "charger_api",
+    "timestamp": "2026-02-21T13:11:00Z",
+    "charger_id": "AUS_0500",
+    "lat": 30.2795,
+    "lon": -97.72,
+    "status": "degraded",
+    "text": "network latency elevated but sessions still start"
+  },
+  {
+    "id": "sig_011",
+    "source": "ugc",
+    "timestamp": "2026-02-21T13:12:00Z",
+    "charger_id": "AUS_0500",
+    "lat": 30.2795,
+    "lon": -97.72,
+    "status": "degraded",
+    "text": "slow charging but functional"
+  }
+]

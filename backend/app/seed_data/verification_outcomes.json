@@ -1,9 +1,30 @@
 [
   {
-    "id": "ver_001",
-    "case_id": "case_001",
-    "verified_state": "confirmed_down",
+    "id": "ver_0144",
+    "case_id": "case_aus_0144",
+    "result": "false_alarm",
     "timestamp": "2026-02-21T02:00:00Z",
-    "notes": "Field tech confirmed connector issue."
+    "notes": "Remote ping and reboot recovered service; no truck roll needed."
+  },
+  {
+    "id": "ver_0201",
+    "case_id": "case_aus_0201",
+    "result": "confirmed_issue",
+    "timestamp": "2026-02-21T02:07:00Z",
+    "notes": "Payment terminal remains unavailable after remote retries; dispatch justified."
+  },
+  {
+    "id": "ver_0330",
+    "case_id": "case_aus_0330",
+    "result": "needs_more_data",
+    "timestamp": "2026-02-21T02:15:00Z",
+    "notes": "Single-source alert only; requested additional telemetry capture."
+  },
+  {
+    "id": "ver_0500",
+    "case_id": "case_aus_0500",
+    "result": "false_alarm",
+    "timestamp": "2026-02-21T02:20:00Z",
+    "notes": "Observed normal charging after remote diagnostics; no dispatch needed."
   }
 ]

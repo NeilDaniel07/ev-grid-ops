@@ -52,6 +52,26 @@ In the demo, both systems receive the same incident stream:
 
 Result: **fewer unnecessary dispatches with strong operational coverage**
 
+## Demo Seed Data
+
+The backend includes a deterministic demo dataset in:
+- `backend/app/seed_data/signals.json`
+- `backend/app/seed_data/verification_outcomes.json`
+- `backend/app/seed_data/grid_stress.json`
+
+Load it into the database:
+
+```bash
+cd backend
+.venv/bin/python -m app.seed_data.load_demo_seed
+```
+
+Or reset through the API:
+
+```bash
+curl -X POST http://localhost:8000/api/demo/reset
+```
+
 ## What Makes This Stand Out
 
 - Clear business value tied to operating cost
@@ -67,4 +87,4 @@ Result: **fewer unnecessary dispatches with strong operational coverage**
 
 ## Hackathon Context
 
-This project was built in a fast execution environment with real constraints, mentorship from YC founders, and a focus on shipping practical AI + infrastructure tools for energy and urban systems.
+This project was built in a fast execution environment with real constraints and a focus on shipping practical AI + infrastructure tools for energy and urban systems.
