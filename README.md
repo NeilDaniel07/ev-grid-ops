@@ -72,13 +72,6 @@ Or reset through the API:
 curl -X POST http://localhost:8000/api/demo/reset
 ```
 
-## What Makes This Stand Out
-
-- Clear business value tied to operating cost
-- Explainable decisions (not black-box outputs)
-- Built for real operator workflows, not a toy chatbot
-- Focused MVP that proves a concrete economic lever
-
 ## Team
 
 - **Aditya Patwardhan** — Member 1: Data, API state, case lifecycle, metrics
